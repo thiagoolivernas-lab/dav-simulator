@@ -53,14 +53,46 @@ O banco SQLite é criado pelas migrações. Usuários e registros da máquina or
 
 O arquivo `DAVsimulator/modelos/cnn_ecg_treinado.keras` é necessário na inicialização da aplicação e é versionado por Git LFS, conforme `.gitattributes`. Clone com Git e execute `git lfs pull` para obter o modelo completo. Se o carregamento do Keras falhar, confira se o arquivo tem aproximadamente 305 MB; um arquivo de poucas linhas é apenas o ponteiro LFS.
 
-## Dados e uso
+## Dados do PhysioNet e importação
 
-1. Acesse `/dav/datasets/upload/`.
-2. Importe um ZIP de sinais no formato WFDB, com os arquivos `.hea` e `.dat` correspondentes, e informe a frequência de amostragem correta.
-3. Acesse `/dav/datasets/`, selecione o registro e abra a análise de sinais.
-4. Explore a simulação em `/dav/`, a sintonia em `/dav/sintonia/` e as páginas de validação pelo menu.
+Os sinais, uploads e banco de dados local não estão incluídos no repositório. Para reproduzir as análises, baixe o registro **3000003** da **MIMIC-III Waveform Database, versão 1.0**, diretamente na fonte:
 
-Os sinais locais MIMIC, uploads e banco de dados não estão incluídos. Para reproduzir as análises originais, obtenha os dados pela fonte autorizada e importe-os na sua instalação. O script `DAVsimulator/dataset/download_mimic.py` contém a referência ao registro `3000003` em `mimic3wdb/30/3000003`; ele lê o registro remoto e imprime informações, sem cadastrar dados no sistema.
+[Baixar os sinais do registro 3000003 no PhysioNet](https://physionet.org/content/mimic3wdb/1.0/30/3000003/#files-panel)
+
+### 1. Baixar os arquivos e preparar o ZIP
+
+1. Abra o link acima e localize a lista de arquivos da pasta `3000003`, na seção **Files**. O comando geral de download mostrado na página aponta para a base inteira; para este projeto, baixe somente os arquivos desse registro.
+2. Crie uma pasta chamada `3000003` no seu computador e salve nela os arquivos da lista, preservando seus nomes e extensões. Use a opção de download do arquivo; se o navegador exibir o conteúdo de um `.hea`, salve o arquivo original sem acrescentar `.txt`.
+3. Inclua o cabeçalho `3000003.hea`, o arquivo `3000003_layout.hea`, todos os pares `.hea` e `.dat` dos segmentos `3000003_0001` até `3000003_0017`, os arquivos `3000003n.hea` e `3000003n.dat` e o arquivo `RECORDS`. Cada segmento precisa de seu `.hea` e do `.dat` de mesmo nome, na mesma pasta.
+4. Compacte a pasta em formato **ZIP**, gerando `3000003.zip`. No Windows, clique com o botão direito na pasta e escolha a opção de compactar em ZIP (ou **Enviar para → Pasta compactada**, conforme a versão). O sistema aceita os arquivos dentro da pasta `3000003` no ZIP; não é necessário extraí-los antes do upload.
+
+### 2. Importar no DAV Simulator
+
+Com a instalação concluída e o servidor em execução (`python manage.py runserver` no ambiente virtual):
+
+1. Abra [Upload de Dataset](http://127.0.0.1:8000/dav/datasets/upload/) ou acesse a lista de datasets e clique em **Enviar dataset**.
+2. Preencha o formulário:
+
+   | Campo | Valor |
+   | --- | --- |
+   | Nome | `MIMIC — registro 3000003` |
+   | Record id | `3000003` |
+   | Arquivo zip | Selecione `3000003.zip` |
+   | Frequência amostragem | `125` Hz para os sinais de waveform desse registro |
+
+3. Clique em **Salvar Dataset** e aguarde o processamento. O sistema extrai o ZIP, lê os cabeçalhos e cadastra os sinais encontrados.
+4. Na [lista de datasets](http://127.0.0.1:8000/dav/datasets/), clique no nome do registro e depois em **Visualizar sinais**.
+5. Selecione o segmento desejado na página de sinais. Para acompanhar o experimento padrão do script da dissertação, utilize `3000003_0008`; a análise alternativa utiliza `3000003_0010`.
+
+Se nenhum segmento aparecer, confira se o ZIP contém os pares `.hea`/`.dat` com os nomes originais. A presença de um sinal pode variar entre segmentos; selecione um trecho com os canais necessários à análise.
+
+### 3. Executar as análises
+
+Explore a simulação em `/dav/`, a sintonia em `/dav/sintonia/` e as páginas de validação pelo menu. Para gerar os relatórios pelos scripts, siga a seção seguinte. Em uma instalação destinada à reprodução, importe o registro `3000003` primeiro, pois os scripts selecionam o primeiro registro do banco.
+
+O script `DAVsimulator/dataset/download_mimic.py` apenas lê o registro remoto e imprime informações; ele não prepara o ZIP nem cadastra os sinais na aplicação.
+
+**Fonte dos dados:** Moody, B., Moody, G., Villarroel, M., Clifford, G. D., & Silva, I. (2020). *MIMIC-III Waveform Database (version 1.0).* PhysioNet. [DOI: 10.13026/c2607m](https://doi.org/10.13026/c2607m). Consulte na página do PhysioNet os termos de uso e as referências solicitadas ao utilizar os dados em trabalhos acadêmicos.
 
 ## Verificação e resultados
 
