@@ -14,12 +14,20 @@ As versões das dependências diretas do ambiente original estão em `requiremen
 
 ## Instalação no Windows (PowerShell)
 
-Substitua a URL abaixo pela URL deste repositório:
+Antes dos comandos, instale o **Python 3.13** no computador. No instalador do Windows, marque **Add Python to PATH** e mantenha o Python Launcher (`py`) habilitado. Instale também Git e Git LFS. Feche e reabra o PowerShell após instalar.
+
+Confira se o Python está disponível:
+
+```powershell
+py -3.13 --version
+```
+
+O comando deve mostrar `Python 3.13.x`. Depois, baixe o projeto e prepare o ambiente:
 
 ```powershell
 git lfs install
-git clone <URL_DO_REPOSITORIO>
-cd <PASTA_DO_REPOSITORIO>
+git clone https://github.com/thiagoolivernas-lab/dav-simulator.git
+cd dav-simulator
 git lfs pull
 py -3.13 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install --upgrade pip
