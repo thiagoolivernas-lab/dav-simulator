@@ -1,0 +1,162 @@
+{% extends "projeto/base.html" %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="mb-4">
+        <h2 class="fw-bold">Validacao ECG-ML e Controle Adaptativo</h2>
+        <p class="text-muted">
+            A rede neural detecta picos R no ECG. A frequencia cardiaca e a HRV sao extraidas matematicamente dos intervalos RR e comparadas com a referencia fisiologica disponivel por pulsos ABP.
+        </p>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-2">
+            <div class="card p-3 h-100">
+                <small class="text-muted">MAE FC</small>
+                <h3>{{ metricas_ecg.mae_fc|default:"-" }}</h3>
+            </div>
+        </div>
+
+        <div class="col-md-2">
+            <div class="card p-3 h-100">
+                <small class="text-muted">MAE HRV</small>
+                <h3>{{ metricas_ecg.mae_hrv|default:"-" }}</h3>
+            </div>
+        </div>
+
+        <div class="col-md-2">
+            <div class="card p-3 h-100">
+                <small class="text-muted">Sensibilidade</small>
+                <h3>{{ metricas_ecg.sensibilidade_media|default:"-" }}</h3>
+            </div>
+        </div>
+
+        <div class="col-md-2">
+            <div class="card p-3 h-100">
+                <small class="text-muted">Precisao</small>
+                <h3>{{ metricas_ecg.precisao_media|default:"-" }}</h3>
+            </div>
+        </div>
+
+        <div class="col-md-2">
+            <div class="card p-3 h-100">
+                <small class="text-muted">F1</small>
+                <h3>{{ metricas_ecg.f1_medio|default:"-" }}</h3>
+            </div>
+        </div>
+
+        <div class="col-md-2">
+            <div class="card p-3 h-100">
+                <small class="text-muted">Referencia</small>
+                <div class="small">{{ metricas_ecg.referencia }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mt-4">
+        <div class="card-header bg-white">
+            <strong>Picos R previstos pela ML</strong>
+        </div>
+        <div class="card-body">
+            <div id="grafico_ecg_ml"></div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mt-4">
+        <div class="card-header bg-white">
+            <strong>Resultados por segmento</strong>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered mb-0">
+                <thead>
+                    <tr>
+                        <th>Segmento</th>
+                        <th>FC ML</th>
+                        <th>HRV ML</th>
+                        <th>FC ABP</th>
+                        <th>HRV ABP</th>
+                        <th>Erro FC</th>
+                        <th>Erro HRV</th>
+                        <th>Sens.</th>
+                        <th>Precisao</th>
+                        <th>F1</th>
+                        <th>Classe Fuzzy</th>
+                        <th>Demanda</th>
+                        <th>PAM Alvo</th>
+                        <th>RPM Final</th>
+                        <th>Fluxo Final</th>
+                        <th>PAM Final</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for r in resultados %}
+                    <tr>
+                        <td>{{ r.segmento }}</td>
+                        <td>{{ r.fc }}</td>
+                        <td>{{ r.hrv }}</td>
+                        <td>{{ r.fc_abp|default:"-" }}</td>
+                        <td>{{ r.hrv_abp|default:"-" }}</td>
+                        <td>{{ r.erro_fc|default:"-" }}</td>
+                        <td>{{ r.erro_hrv|default:"-" }}</td>
+                        <td>{{ r.sensibilidade|default:"-" }}</td>
+                        <td>{{ r.precisao|default:"-" }}</td>
+                        <td>{{ r.f1|default:"-" }}</td>
+                        <td>{{ r.classe }}</td>
+                        <td>{{ r.demanda }}</td>
+                        <td>{{ r.pam_alvo }}</td>
+                        <td>{{ r.rpm_final }}</td>
+                        <td>{{ r.fluxo_final }}</td>
+                        <td>{{ r.pam_final }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="16" class="text-center text-muted py-4">
+                            Nenhum segmento com ECG suficiente para validacao.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<script>
+const preview = {{ ecg_preview_json|safe }};
+
+if (preview.ecg) {
+    const picos = preview.picos || [];
+    const yPicos = picos.map(i => preview.ecg[i]);
+
+    Plotly.newPlot("grafico_ecg_ml", [
+        {
+            y: preview.ecg,
+            mode: "lines",
+            name: "ECG DII"
+        },
+        {
+            x: picos,
+            y: yPicos,
+            mode: "markers",
+            name: "Picos R previstos",
+            marker: {
+                color: "red",
+                size: 8
+            }
+        }
+    ], {
+        title: preview.segmento || "ECG com picos R previstos",
+        margin: { t: 40 },
+        xaxis: { title: "Amostras" },
+        yaxis: { title: "ECG normalizado" }
+    });
+}
+</script>
+
+{% endblock %}

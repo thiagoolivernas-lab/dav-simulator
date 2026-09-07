@@ -1,0 +1,175 @@
+{% extends "projeto/base.html" %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="mb-4">
+        <h2 class="fw-bold">Validacao Windkessel por ciclos RR</h2>
+        <p class="text-muted">
+            O ECG define o inicio e o fim de cada ciclo cardiaco. A ABP e usada para calibrar tau e validar a PAM reconstruida pela curva exponencial de Windkessel, sem ML e sem transformar FC/HRV em PAM.
+        </p>
+        {% if registro %}
+        <a class="btn btn-outline-primary" href="{% url 'DAVsimulator:dataset_sinais' registro.id %}">
+            Abrir simulacao por amostra
+        </a>
+        {% endif %}
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-2">
+            <div class="card p-3 h-100">
+                <small class="text-muted">Segmentos</small>
+                <h3>{{ quantidade }}</h3>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card p-3 h-100">
+                <small class="text-muted">MAE</small>
+                <h3>{{ metricas_globais.mae }}</h3>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card p-3 h-100">
+                <small class="text-muted">RMSE</small>
+                <h3>{{ metricas_globais.rmse }}</h3>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card p-3 h-100">
+                <small class="text-muted">MSRE</small>
+                <h3>{{ metricas_globais.msre }}</h3>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card p-3 h-100">
+                <small class="text-muted">MAPE (%)</small>
+                <h3>{{ metricas_globais.mape }}</h3>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card p-3 h-100">
+                <small class="text-muted">R2</small>
+                <h3>{{ metricas_globais.r2 }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mt-4">
+        <div class="card-header bg-white">
+            <strong>PAM real x Windkessel exponencial calibrado</strong>
+        </div>
+        <div class="card-body">
+            <div id="grafico_pam_dav"></div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mt-4">
+        <div class="card-header bg-white">
+            <strong>Parametros calibrados por ciclo</strong>
+        </div>
+        <div class="card-body">
+            <div id="grafico_estados_dav"></div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mt-4">
+        <div class="card-header bg-white">
+            <strong>Metricas por segmento</strong>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered mb-0">
+                <thead>
+                    <tr>
+                        <th>Segmento</th>
+                        <th>N treino</th>
+                        <th>N teste</th>
+                        <th>MAE</th>
+                        <th>RMSE</th>
+                        <th>MSRE</th>
+                        <th>MAPE</th>
+                        <th>R2</th>
+                        <th>R_eff basal</th>
+                        <th>Tau medio</th>
+                        <th>Fluxo DAV basal</th>
+                        <th>Metodo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in resultados %}
+                    <tr>
+                        <td>{{ r.segmento }}</td>
+                        <td>{{ r.n_treino }}</td>
+                        <td>{{ r.n_teste }}</td>
+                        <td>{{ r.mae }}</td>
+                        <td>{{ r.rmse }}</td>
+                        <td>{{ r.msre }}</td>
+                        <td>{{ r.mape }}</td>
+                        <td>{{ r.r2 }}</td>
+                        <td>{{ r.r_medio }}</td>
+                        <td>{{ r.tau_medio }}</td>
+                        <td>{{ r.q_bomba }}</td>
+                        <td>{{ r.metodo }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="12" class="text-center text-muted py-4">
+                            Nenhum segmento com dados suficientes para validacao.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<script>
+const pamReal = {{ pam_real_json|safe }};
+const pamPred = {{ pam_pred_json|safe }};
+const rSerie = {{ r_json|safe }};
+const tauSerie = {{ tau_json|safe }};
+const x = pamReal.map((_, i) => i + 1);
+
+Plotly.newPlot("grafico_pam_dav", [
+    {
+        x,
+        y: pamReal,
+        mode: "lines+markers",
+        name: "PAM real"
+    },
+    {
+        x,
+        y: pamPred,
+        mode: "lines+markers",
+        name: "PAM Windkessel calibrada"
+    }
+], {
+    margin: { t: 30 },
+    xaxis: { title: "Batimento de teste" },
+    yaxis: { title: "PAM (mmHg)" }
+});
+
+Plotly.newPlot("grafico_estados_dav", [
+    {
+        x,
+        y: rSerie,
+        mode: "lines",
+        name: "R_eff basal"
+    },
+    {
+        x,
+        y: tauSerie,
+        mode: "lines",
+        name: "Tau"
+    }
+], {
+    margin: { t: 30 },
+    xaxis: { title: "Batimento de teste" },
+    yaxis: { title: "R_eff / Tau" }
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "projeto/base.html" %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="mb-4">
+        <h2 class="fw-bold">Upload de Dataset</h2>
+        <p class="text-muted">
+            Cadastro de registros fisiológicos MIMIC/WFDB para sintonia e simulação DAV.
+        </p>
+    </div>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+
+                {{ form.as_p }}
+
+                <button type="submit" class="btn btn-primary px-4">
+                    Salvar Dataset
+                </button>
+
+                <a href="{% url 'DAVsimulator:datasets' %}" class="btn btn-secondary px-4">
+                    Voltar
+                </a>
+
+            </div>
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}

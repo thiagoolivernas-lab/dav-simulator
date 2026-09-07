@@ -1,0 +1,78 @@
+{% extends "projeto/base.html" %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="mb-4">
+        <h2 class="fw-bold">{{ registro.nome }}</h2>
+        <p class="text-muted">
+            Record ID: {{ registro.record_id }}
+        </p>
+    </div>
+
+    <div class="row g-4">
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <small class="text-muted">Frequência</small>
+                    <h3>{{ registro.frequencia_amostragem }} Hz</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <small class="text-muted">ECG</small>
+                    <h3>{% if registro.possui_ecg %}✅{% else %}❌{% endif %}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <small class="text-muted">ABP</small>
+                    <h3>{% if registro.possui_abp %}✅{% else %}❌{% endif %}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <small class="text-muted">RESP</small>
+                    <h3>{% if registro.possui_resp %}✅{% else %}❌{% endif %}</h3>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="card shadow-sm border-0 mt-4">
+        <div class="card-header bg-white">
+            <strong>Observações / Detecção automática</strong>
+        </div>
+
+        <div class="card-body">
+            <pre>{{ registro.observacoes }}</pre>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a href="{% url 'DAVsimulator:datasets' %}" class="btn btn-secondary">
+            Voltar
+        </a>
+
+        <a href="{% url 'DAVsimulator:dataset_sinais' registro.pk %}" class="btn btn-primary">
+            Visualizar sinais
+        </a>
+
+ 
+    </div>
+
+</div>
+
+{% endblock %}

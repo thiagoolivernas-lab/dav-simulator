@@ -1,0 +1,228 @@
+{% extends "projeto/base.html" %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="mb-4">
+        <h2 class="fw-bold">Simulador DAV</h2>
+        <p class="text-muted">
+            Simulação hemodinâmica e controle fisiológico para dispositivo de assistência ventricular.
+        </p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="row g-4">
+
+            <div class="col-lg-6">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-white">
+                        <strong>Entradas fisiológicas</strong>
+                    </div>
+                    <div class="card-body">
+                        {{ form.fc.label_tag }} {{ form.fc }}
+                        <br>
+                        {{ form.hrv.label_tag }} {{ form.hrv }}
+                        <br>
+                        {{ form.spo2.label_tag }} {{ form.spo2 }}
+                        <br>
+                        {{ form.temperatura.label_tag }} {{ form.temperatura }}
+                        <br>
+                        {{ form.atividade.label_tag }} {{ form.atividade }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-white">
+                        <strong>Modelo e controle</strong>
+                    </div>
+                    <div class="card-body">
+                        {{ form.pam_basal.label_tag }} {{ form.pam_basal }}
+                        <br>
+                        <br>
+                        {{ form.resistencia.label_tag }} {{ form.resistencia }}
+                        <br>
+                        {{ form.tau_base.label_tag }} {{ form.tau_base }}
+                        <br>
+                        {{ form.vazao_basal.label_tag }} {{ form.vazao_basal }}
+                        {{ form.rpm_inicial.label_tag }} {{ form.rpm_inicial }}
+                        <br>
+                        {{ form.kp.label_tag }} {{ form.kp }}
+                        <br>
+                        {{ form.duracao.label_tag }} {{ form.duracao }}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary px-4">
+                Executar Simulação
+            </button>
+        </div>
+
+    </form>
+
+    {% if resultado %}
+    <div class="row g-4 mt-4">
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <small class="text-muted">Demanda fisiológica</small>
+                    <h3>{{ resultado.demanda }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <small class="text-muted">PAM alvo</small>
+                    <h3>{{ resultado.pam_alvo }} mmHg</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <small class="text-muted">Erro de controle</small>
+                    <h3>{{ resultado.erro }} mmHg</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <small class="text-muted">RPM final</small>
+                    <h3>{{ resultado.rpm_final }}</h3>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    {% endif %}
+
+</div>
+
+{% if resultado %}
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+<div class="row g-4 mt-4">
+
+    <div class="col-lg-6">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white">
+                <strong>PAM simulada x PAM alvo</strong>
+            </div>
+            <div class="card-body">
+                <div id="grafico_pam"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white">
+                <strong>RPM da bomba</strong>
+            </div>
+            <div class="card-body">
+                <div id="grafico_rpm"></div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="col-md-3">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <small class="text-muted">Constante tau</small>
+            <h3>{{ resultado.tau }}</h3>
+        </div>
+    </div>
+</div>
+
+<div class="col-md-3">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <small class="text-muted">Vazão final</small>
+            <h3>{{ resultado.vazao_final }} L/min</h3>
+        </div>
+    </div>
+</div>
+
+<div class="col-lg-6">
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white">
+            <strong>Vazão da bomba</strong>
+        </div>
+        <div class="card-body">
+            <div id="grafico_vazao"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const tempo = {{ resultado.tempo_json|safe }};
+    const pam = {{ resultado.pam_json|safe }};
+    const pamAlvo = {{ resultado.pam_alvo_json|safe }};
+    const rpm = {{ resultado.rpm_json|safe }};
+    const vazao = {{ resultado.vazao_json|safe }};
+
+Plotly.newPlot("grafico_vazao", [
+    {
+        x: tempo,
+        y: vazao,
+        mode: "lines",
+        name: "Vazão"
+    }
+], {
+    margin: { t: 20 },
+    xaxis: { title: "Tempo (s)" },
+    yaxis: { title: "Vazão (L/min)" }
+});
+
+
+    Plotly.newPlot("grafico_pam", [
+        {
+            x: tempo,
+            y: pam,
+            mode: "lines",
+            name: "PAM média"
+        },
+        {
+            x: tempo,
+            y: pamAlvo,
+            mode: "lines",
+            name: "PAM alvo"
+        }
+    ], {
+        margin: { t: 20 },
+        xaxis: { title: "Tempo (s)" },
+        yaxis: { title: "Pressão (mmHg)" }
+    });
+
+    Plotly.newPlot("grafico_rpm", [
+        {
+            x: tempo,
+            y: rpm,
+            mode: "lines",
+            name: "RPM"
+        }
+    ], {
+        margin: { t: 20 },
+        xaxis: { title: "Tempo (s)" },
+        yaxis: { title: "RPM" }
+    });
+</script>
+{% endif %}
+
+{% endblock %}

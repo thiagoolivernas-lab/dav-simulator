@@ -1,0 +1,87 @@
+{% extends "projeto/base.html" %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="mb-4">
+        <h2 class="fw-bold">Sintonia Hemodinâmica</h2>
+        <p class="text-muted">
+            Análise exploratória de ABP isolada. A estimação oficial de tau exige ECG sincronizado para delimitar os ciclos RR.
+        </p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white">
+                <strong>Entrada do sinal ABP</strong>
+            </div>
+
+            <div class="card-body">
+                {{ form.abp.label_tag }}
+                {{ form.abp }}
+
+                <br>
+
+                {{ form.vazao_q.label_tag }}
+                {{ form.vazao_q }}
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary px-4">
+            Analisar ABP
+        </button>
+    </form>
+
+    {% if resultado %}
+    {% if resultado.aviso %}
+    <div class="alert alert-warning mt-4">
+        {{ resultado.aviso }}
+    </div>
+    {% endif %}
+    <div class="row g-4 mt-4">
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <small class="text-muted">PAM média</small>
+                    <h3>{{ resultado.pam_media }} mmHg</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <small class="text-muted">Tau</small>
+                    <h3>requer ECG/RR</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <small class="text-muted">R_eff</small>
+                    <h3>{{ resultado.resistencia }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <small class="text-muted">C</small>
+                    <h3>implícita em tau</h3>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    {% endif %}
+
+</div>
+
+{% endblock %}

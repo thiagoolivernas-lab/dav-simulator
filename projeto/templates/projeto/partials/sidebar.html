@@ -1,0 +1,52 @@
+{% load static %}
+
+<h6>DAVSimulator</h6>
+
+<a class="navlink" data-path="/dav/" href="{% url 'DAVsimulator:home' %}">
+  <i class="bi bi-heart-pulse"></i>
+  Simulador de DAV
+</a>
+
+<a class="navlink" data-path="/dav/datasets" href="{% url 'DAVsimulator:datasets' %}">
+  <i class="bi bi-database"></i>
+  Datasets
+</a>
+
+<a class="navlink" data-path="/dav/sintonia" href="{% url 'DAVsimulator:sintonia' %}">
+  <i class="bi bi-sliders"></i>
+  Sintonia
+</a>
+
+<a class="navlink" data-path="/dav/fuzzy" href="{% url 'DAVsimulator:fuzzy' %}">
+  <i class="bi bi-diagram-3"></i>
+  Controle Fuzzy
+</a>
+
+<a class="navlink" data-path="/dav/validacao-calibracao" href="{% url 'DAVsimulator:validacao_calibracao' %}">
+  <i class="bi bi-clipboard2-pulse"></i>
+  Validacao Calibracao
+</a>
+
+<a class="navlink" data-path="/dav/validacao-windkessel-dav" href="{% url 'DAVsimulator:validacao_windkessel_dav' %}">
+  <i class="bi bi-cpu"></i>
+  Windkessel-DAV
+</a>
+
+<a class="navlink" data-path="/dav/validacao-controle" href="{% url 'DAVsimulator:validacao_controle' %}">
+  <i class="bi bi-activity"></i>
+  Validacao Controle
+</a>
+
+<a class="navlink" data-path="/dav/validacao-sistema-controle" href="{% url 'DAVsimulator:validacao_sistema_controle' %}">
+  <i class="bi bi-graph-up-arrow"></i>
+  Sistema de Controle
+</a>
+
+{% if request.user.is_staff %}
+  <h6>Sistema</h6>
+
+  <a class="navlink" data-path="/admin" href="/admin/">
+    <i class="bi bi-wrench-adjustable-circle"></i>
+    Admin
+  </a>
+{% endif %}

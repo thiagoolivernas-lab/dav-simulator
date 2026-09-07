@@ -1,0 +1,106 @@
+{% extends "projeto/base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <div class="mb-4">
+        <h1 class="display-6">DAVSimulator</h1>
+        <p class="text-muted">
+            Simulador de DAV para analise de sinais, calibracao hemodinamica, estimativa de PAM e controle adaptativo.
+        </p>
+    </div>
+
+    <div class="row g-3">
+
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5>Simulador</h5>
+                    <a class="btn btn-danger" href="{% url 'DAVsimulator:home' %}">
+                        Abrir
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5>Datasets</h5>
+                    <a class="btn btn-outline-danger" href="{% url 'DAVsimulator:datasets' %}">
+                        Gerenciar
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5>Sintonia</h5>
+                    <a class="btn btn-outline-danger" href="{% url 'DAVsimulator:sintonia' %}">
+                        Ajustar
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5>Controle Fuzzy</h5>
+                    <a class="btn btn-outline-danger" href="{% url 'DAVsimulator:fuzzy' %}">
+                        Abrir
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5>Validacao Calibracao</h5>
+                    <a class="btn btn-outline-danger" href="{% url 'DAVsimulator:validacao_calibracao' %}">
+                        Abrir
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5>Windkessel-DAV</h5>
+                    <a class="btn btn-outline-danger" href="{% url 'DAVsimulator:validacao_windkessel_dav' %}">
+                        Abrir
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5>Validacao Controle</h5>
+                    <a class="btn btn-outline-danger" href="{% url 'DAVsimulator:validacao_controle' %}">
+                        Abrir
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5>Sistema de Controle</h5>
+                    <a class="btn btn-outline-danger" href="{% url 'DAVsimulator:validacao_sistema_controle' %}">
+                        Abrir
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,2738 @@
+{% extends "projeto/base.html" %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="mb-4">
+        <h2 class="fw-bold">Visualizar Sinais</h2>
+        <p class="text-muted">
+            Registro: {{ registro.nome }} — {{ registro.record_id }}
+        </p>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white">
+            <strong>Arquivos extraídos</strong>
+        </div>
+        <div class="card-body">
+            <p><strong>Pasta extraída:</strong></p>
+            <pre>{{ registro.pasta_extraida }}</pre>
+
+            <p><strong>Observações:</strong></p>
+            <pre>{{ registro.observacoes }}</pre>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mt-4">
+        <div class="card-header bg-white">
+            <strong>Segmentos encontrados</strong>
+        </div>
+        <div class="card-body">
+            <table class="table table-sm table-hover">
+                <thead>
+                    <tr>
+                        <th>Segmento</th>
+                        <th>Arquivo .dat</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in segmentos %}
+                    <tr>
+                        <td>{{ s.nome }}</td>
+                        <td><code>{{ s.arquivo_dat }}</code></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="2" class="text-muted">
+                            Nenhum segmento .dat encontrado.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <form method="get" class="row g-3 mb-4 mt-4">
+
+        <div class="col-md-3">
+            <label class="form-label">Segmento</label>
+            <select name="segmento" class="form-control">
+                {% for s in segmentos %}
+                <option value="{{ s.nome }}" {% if s.nome == segmento_selecionado %}selected{% endif %}>
+                    {{ s.nome }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label">Início</label>
+            <input type="number" name="inicio" value="{{ inicio }}" class="form-control">
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label">Amostras</label>
+            <input type="number" name="amostras" value="{{ amostras }}" class="form-control">
+        </div>
+
+        <div class="col-md-3 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary">
+                Atualizar janela
+            </button>
+        </div>
+
+    </form>
+
+    {% if canais_json %}
+    <div class="card shadow-sm border-0 mt-4">
+        <div class="card-header bg-white">
+            <strong>Canais separados</strong>
+        </div>
+        <div class="card-body">
+            <p>
+                <strong>Segmento:</strong> {{ info_segmento.nome }} |
+                <strong>FS:</strong> {{ info_segmento.fs }} Hz |
+                <strong>Canais:</strong> {{ info_segmento.n_canais }}
+            </p>
+
+            <p>
+                <strong>Nomes dos canais:</strong>
+                {{ nomes_canais }}
+            </p>
+
+            <div id="graficos_canais"></div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if resultado_picos %}
+    <div class="row g-4 mt-4">
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <small class="text-muted">Picos R detectados</small>
+                    <h3>{{ resultado_picos.picos|length }}</h3>
+                    <small class="text-muted">{{ resultado_picos.metodo }}</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <small class="text-muted">FC média</small>
+                    <h3>
+                        {% if metricas_ecg %}
+                            {{ metricas_ecg.fc }} bpm
+                        {% else %}
+                            -
+                        {% endif %}
+                    </h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <small class="text-muted">RMSSD</small>
+                    <h3>
+                        {% if metricas_ecg %}
+                            {{ metricas_ecg.rmssd }} ms
+                        {% else %}
+                            -
+                        {% endif %}
+                    </h3>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    {% endif %}
+
+    {% if metricas_abp %}
+    <div class="row g-4 mt-4">
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <small class="text-muted">PAS</small>
+                    <h3>{{ metricas_abp.pas }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <small class="text-muted">PAD</small>
+                    <h3>{{ metricas_abp.pad }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <small class="text-muted">PAM real</small>
+                    <h3>{{ metricas_abp.pam }}</h3>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    {% endif %}
+
+    {% if tau_medio %}
+    <div class="row g-4 mt-4">
+
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <small class="text-muted">Tau mediano</small>
+                    <h3>{{ tau_medio }} s</h3>
+                    <small class="text-muted">
+                        Estimado por ajuste exponencial da diástole útil
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <small class="text-muted">Desvio Tau</small>
+                    <h3>{{ tau_std }} s</h3>
+                    <small class="text-muted">
+                        Variabilidade entre batimentos aceitos
+                    </small>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    {% endif %}
+
+    {% if resultados_tau %}
+    <div class="card shadow-sm border-0 mt-4">
+
+        <div class="card-header bg-white">
+            <strong>Ajustes de Tau por Batimento</strong>
+        </div>
+
+        <div class="card-body">
+
+            <div class="table-responsive">
+                <table class="table table-sm table-hover align-middle">
+
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Tau (s)</th>
+                            <th>R²</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for r in resultados_tau %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ r.tau|floatformat:3 }}</td>
+                            <td>{{ r.r2|floatformat:3 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+
+                </table>
+            </div>
+
+        </div>
+
+        {% if metricas_modelo_pam %}
+        <div class="card shadow-sm border-0 mt-4 mb-3">
+            <div class="card-header bg-white">
+                <strong>Passo a passo da calibracao da PAM base</strong>
+            </div>
+            <div class="card-body">
+                <div class="row g-3 mb-3">
+                    <div class="col-md-3">
+                        <div class="card p-3 h-100">
+                            <small class="text-muted">1. Tau customizado</small>
+                            <h4>{{ tau_modelo }} s</h4>
+                            <small class="text-muted">mediana dos ciclos aceitos</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card p-3 h-100">
+                            <small class="text-muted">2. PAM bruta</small>
+                            <h4 id="pam_bruta_media_card">-</h4>
+                            <small class="text-muted">media da exponencial ajustada</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card p-3 h-100">
+                            <small class="text-muted">3. Offset calibrado</small>
+                            <h4>{{ offset_calibracao }} mmHg</h4>
+                            <small class="text-muted">correcao media do paciente</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card p-3 h-100">
+                            <small class="text-muted">4. PAM base estimada</small>
+                            <h4 id="pam_base_media_card">-</h4>
+                            <small class="text-muted">PAM bruta + offset</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="grafico_passo_tau_exemplo"></div>
+                <div id="grafico_passo_tau_distribuicao"></div>
+                <div id="grafico_passo_pam_bruta_offset"></div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if metricas_modelo_pam %}
+        <div class="card shadow-sm border-0 mt-4 mb-3">
+            <div class="card-header bg-white">
+                <strong>Acuracia da PAM base estimada nesta amostra</strong>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-2">
+                        <div class="card p-3 h-100">
+                            <small class="text-muted">MAE</small>
+                            <h4>{{ metricas_modelo_pam.mae }}</h4>
+                            <small class="text-muted">mmHg</small>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card p-3 h-100">
+                            <small class="text-muted">RMSE</small>
+                            <h4>{{ metricas_modelo_pam.rmse }}</h4>
+                            <small class="text-muted">mmHg</small>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card p-3 h-100">
+                            <small class="text-muted">MAPE</small>
+                            <h4>{{ metricas_modelo_pam.mape }}%</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card p-3 h-100">
+                            <small class="text-muted">R2</small>
+                            <h4>{{ metricas_modelo_pam.r2 }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card p-3 h-100">
+                            <small class="text-muted">Erro medio</small>
+                            <h4>{{ metricas_modelo_pam.erro_medio }}</h4>
+                            <small class="text-muted">mmHg</small>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card p-3 h-100">
+                            <small class="text-muted">Erro max abs</small>
+                            <h4>{{ metricas_modelo_pam.erro_max_abs }}</h4>
+                            <small class="text-muted">mmHg</small>
+                        </div>
+                    </div>
+                </div>
+                <small class="text-muted d-block mt-3">
+                    Calculado na janela selecionada, comparando PAM real do ABP com a PAM base estimada pelo modelo Windkessel exponencial calibrado.
+                </small>
+            </div>
+        </div>
+        {% elif pam_batimentos_json != "[]" %}
+        <div class="alert alert-warning mt-4 mb-3">
+            Nao foi possivel calcular metricas de acuracia para esta janela. Selecione um segmento com mais batimentos aceitos ou aumente a quantidade de amostras.
+        </div>
+        {% endif %}
+
+        {% if observador_pressorico %}
+        <div class="card shadow-sm border-0 mt-4 mb-3">
+            <div class="card-header bg-white">
+                <strong>Observador pressorico por ciclo</strong>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">
+                    A ABP e usada nesta tabela apenas como referencia de
+                    calibracao/validacao. A sistole e ajustada por
+                    P_sis(t) = a*t^2 + b*t + c. A PAS estimada vem do vertice
+                    da parabola, tPAS = -b/(2*a), aceito apenas quando a < 0,
+                    tPAS esta dentro da janela sistolica e o ajuste tem R2
+                    adequado; a diastole por
+                    P_dia(t) = P0*exp(-t/tau) + P_infinito. A PAD estimada
+                    e extrapolada pela curva diastolica ate o fim do ciclo.
+                    PAS e PAD recebem offset individual de calibracao do
+                    paciente. A PAM estimada e calculada por PAD + 1/3*(PAS - PAD).
+                </p>
+
+                {% if metricas_observador_pressorico %}
+                <div class="row g-3 mb-3">
+                    <div class="col-md-2">
+                        <div class="card p-3 h-100">
+                            <small class="text-muted">MAE PAS</small>
+                            <h4>{{ metricas_observador_pressorico.pas_mae }}</h4>
+                            <small class="text-muted">mmHg</small>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card p-3 h-100">
+                            <small class="text-muted">MAE PAD</small>
+                            <h4>{{ metricas_observador_pressorico.pad_mae }}</h4>
+                            <small class="text-muted">mmHg</small>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card p-3 h-100">
+                            <small class="text-muted">MAE PAM</small>
+                            <h4>{{ metricas_observador_pressorico.pam_mae }}</h4>
+                            <small class="text-muted">mmHg</small>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card p-3 h-100">
+                            <small class="text-muted">RMSE PAM</small>
+                            <h4>{{ metricas_observador_pressorico.pam_rmse }}</h4>
+                            <small class="text-muted">mmHg</small>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card p-3 h-100">
+                            <small class="text-muted">R2 PAM</small>
+                            <h4>{{ metricas_observador_pressorico.pam_r2 }}</h4>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>PAS real</th>
+                                <th>PAS estimada</th>
+                                <th>PAS bruta</th>
+                                <th>PAD real</th>
+                                <th>PAD estimada</th>
+                                <th>PAD bruta</th>
+                                <th>PAM real</th>
+                                <th>PAM estimada</th>
+                                <th>Offset PAS</th>
+                                <th>Offset PAD</th>
+                                <th>Tau</th>
+                                <th>a</th>
+                                <th>b</th>
+                                <th>c</th>
+                                <th>x</th>
+                                <th>t PAD</th>
+                                <th>Sistole</th>
+                                <th>Motivo</th>
+                                <th>R2 sistole</th>
+                                <th>R2 tau</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in observador_pressorico %}
+                            <tr>
+                                <td>{{ item.batimento }}</td>
+                                <td>{{ item.pas_real }}</td>
+                                <td>{{ item.pas_estimada }}</td>
+                                <td>{{ item.pas_estimada_bruta }}</td>
+                                <td>{{ item.pad_real }}</td>
+                                <td>{{ item.pad_estimada }}</td>
+                                <td>{{ item.pad_estimada_bruta }}</td>
+                                <td>{{ item.pam_real }}</td>
+                                <td>{{ item.pam_estimada }}</td>
+                                <td>{{ item.offset_pas }}</td>
+                                <td>{{ item.offset_pad }}</td>
+                                <td>{{ item.tau }}</td>
+                                <td>{{ item.a }}</td>
+                                <td>{{ item.b }}</td>
+                                <td>{{ item.c }}</td>
+                                <td>{{ item.x }}</td>
+                                <td>{{ item.t_pad }}</td>
+                                <td>{{ item.modelo_sistole }}</td>
+                                <td>{{ item.motivo_sistole }}</td>
+                                <td>{{ item.r2_sistole }}</td>
+                                <td>{{ item.r2_tau }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if metricas_observador_pressorico or metricas_observador_windkessel_fases %}
+        <div class="card shadow-sm border-0 mt-4 mb-3">
+            <div class="card-header bg-white">
+                <strong>Comparacao dos observadores de PAM</strong>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Metodo</th>
+                                <th>MAE PAM</th>
+                                <th>RMSE PAM</th>
+                                <th>R2 PAM</th>
+                                <th>Observacao</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if metricas_modelo_pam %}
+                            <tr>
+                                <td>Windkessel exponencial calibrado</td>
+                                <td>{{ metricas_modelo_pam.mae }}</td>
+                                <td>{{ metricas_modelo_pam.rmse }}</td>
+                                <td>{{ metricas_modelo_pam.r2 }}</td>
+                                <td>PAM base estimada pelo modelo matematico calibrado</td>
+                            </tr>
+                            {% endif %}
+                            {% if metricas_observador_pressorico %}
+                            <tr>
+                                <td>Sistole quadratica + diastole exponencial</td>
+                                <td>{{ metricas_observador_pressorico.pam_mae }}</td>
+                                <td>{{ metricas_observador_pressorico.pam_rmse }}</td>
+                                <td>{{ metricas_observador_pressorico.pam_r2 }}</td>
+                                <td>Metodo PAS/PAD experimental anterior</td>
+                            </tr>
+                            {% endif %}
+                            {% if metricas_observador_windkessel_fases %}
+                            <tr>
+                                <td>Windkessel por fases</td>
+                                <td>{{ metricas_observador_windkessel_fases.pam_integral.mae }}</td>
+                                <td>{{ metricas_observador_windkessel_fases.pam_integral.rmse }}</td>
+                                <td>{{ metricas_observador_windkessel_fases.pam_integral.r2 }}</td>
+                                <td>PAM preferencial por integral numerica do ciclo</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if observador_windkessel_fases %}
+        <div class="card shadow-sm border-0 mt-4 mb-3">
+            <div class="card-header bg-white">
+                <strong>Observador pressorico Windkessel por ciclo</strong>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">
+                    Metodo experimental. O ciclo e definido por Ri -> Ri+1.
+                    O atraso eletromecanico, o fim da ejecao, tau_s, tau_d,
+                    K, P0 e P_infinito sao ajustados por least squares usando
+                    a ABP apenas para calibracao/validacao. Este resultado nao
+                    altera o controle DAV.
+                </p>
+
+                {% if metricas_observador_windkessel_fases %}
+                <div class="row g-3 mb-3">
+                    <div class="col-md-2">
+                        <div class="card p-3 h-100">
+                            <small class="text-muted">Ciclos validos</small>
+                            <h4>{{ metricas_observador_windkessel_fases.validos }}/{{ metricas_observador_windkessel_fases.total_ciclos }}</h4>
+                            <small class="text-muted">rejeitados: {{ metricas_observador_windkessel_fases.rejeitados }}</small>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card p-3 h-100">
+                            <small class="text-muted">MAE PAS</small>
+                            <h4>{{ metricas_observador_windkessel_fases.pas.mae }}</h4>
+                            <small class="text-muted">mmHg</small>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card p-3 h-100">
+                            <small class="text-muted">MAE PAD</small>
+                            <h4>{{ metricas_observador_windkessel_fases.pad.mae }}</h4>
+                            <small class="text-muted">mmHg</small>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card p-3 h-100">
+                            <small class="text-muted">MAE PAM integral</small>
+                            <h4>{{ metricas_observador_windkessel_fases.pam_integral.mae }}</h4>
+                            <small class="text-muted">mmHg</small>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card p-3 h-100">
+                            <small class="text-muted">RMSE PAM integral</small>
+                            <h4>{{ metricas_observador_windkessel_fases.pam_integral.rmse }}</h4>
+                            <small class="text-muted">mmHg</small>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card p-3 h-100">
+                            <small class="text-muted">R2 PAM integral</small>
+                            <h4>{{ metricas_observador_windkessel_fases.pam_integral.r2 }}</h4>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="alert alert-warning">
+                    Nenhum ciclo valido pelo observador Windkessel por fases.
+                    Verifique os motivos de rejeicao na tabela.
+                </div>
+                {% endif %}
+
+                <div id="grafico_windkessel_fases_ciclo"></div>
+                <div id="grafico_windkessel_fases_pam"></div>
+                <div id="grafico_windkessel_fases_disp"></div>
+
+                <div class="table-responsive mt-3">
+                    <table class="table table-sm table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Ciclo</th>
+                                <th>Valido</th>
+                                <th>RR</th>
+                                <th>delta t_em</th>
+                                <th>t_s</th>
+                                <th>tau_s</th>
+                                <th>tau_d</th>
+                                <th>PAS real</th>
+                                <th>PAS estimada</th>
+                                <th>PAD real</th>
+                                <th>PAD estimada</th>
+                                <th>PAM real</th>
+                                <th>PAM integral</th>
+                                <th>R2 curva</th>
+                                <th>RMSE curva</th>
+                                <th>Motivo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in observador_windkessel_fases %}
+                            <tr>
+                                <td>{{ item.ciclo }}</td>
+                                <td>{% if item.valido %}sim{% else %}nao{% endif %}</td>
+                                <td>{{ item.RR_s }}</td>
+                                <td>{{ item.delta_t_em }}</td>
+                                <td>{{ item.t_s }}</td>
+                                <td>{{ item.tau_s }}</td>
+                                <td>{{ item.tau_d }}</td>
+                                <td>{{ item.PAS_real }}</td>
+                                <td>{{ item.PAS_estimada }}</td>
+                                <td>{{ item.PAD_real }}</td>
+                                <td>{{ item.PAD_estimada }}</td>
+                                <td>{{ item.PAM_real }}</td>
+                                <td>{{ item.PAM_estimada_integral }}</td>
+                                <td>{{ item.R2_curva }}</td>
+                                <td>{{ item.RMSE_curva }}</td>
+                                <td>{{ item.motivo_rejeicao }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div id="grafico_tau"></div>
+        <div class="card shadow-sm border-0 mt-4 mb-3" id="controle_play_pam" style="display: none;">
+            <div class="card-header bg-white">
+                <strong>Reproducao temporal da PAM</strong>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+                    <button type="button" class="btn btn-primary" id="btn_play_pam">
+                        Play
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" id="btn_reset_pam">
+                        Reiniciar
+                    </button>
+                    <input
+                        type="range"
+                        class="form-range flex-grow-1"
+                        min="1"
+                        value="1"
+                        id="slider_pam_tempo"
+                    >
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-2">
+                        <div class="card p-3 h-100">
+                            <small class="text-muted">Batimento</small>
+                            <h4 id="pam_play_batimento">-</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card p-3 h-100">
+                            <small class="text-muted">PAM real</small>
+                            <h4 id="pam_play_real">-</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card p-3 h-100">
+                            <small class="text-muted">PAM estimada bomba</small>
+                            <h4 id="pam_play_bomba">-</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card p-3 h-100">
+                            <small class="text-muted">PAM alvo fuzzy</small>
+                            <h4 id="pam_play_alvo">-</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card p-3 h-100">
+                            <small class="text-muted">Delta bomba</small>
+                            <h4 id="pam_play_delta_bomba">-</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card p-3 h-100">
+                            <small class="text-muted">Delta alvo</small>
+                            <h4 id="pam_play_delta_alvo">-</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="grafico_pam"></div>
+        <div id="grafico_pam_delta_controle"></div>
+        <div id="grafico_tau_pam"></div>
+        <div id="grafico_tau_pp"></div>
+        <div id="grafico_pam_real_modelo"></div>
+        <div id="grafico_observador_pam"></div>
+        <div id="grafico_dav_pam"></div>
+        <div id="grafico_dav_rpm"></div>
+        <div id="grafico_dav_fluxo"></div>
+        <div id="grafico_hq_hm3"></div>
+
+
+    </div>
+    {% endif %}
+
+    <div class="mt-4">
+        <a href="{% url 'DAVsimulator:dataset_detail' registro.pk %}" class="btn btn-secondary">
+            Voltar
+        </a>
+    </div>
+
+</div>
+
+{% if resultado_dav %}
+
+
+
+<div class="card mb-4 mt-4">
+    <div class="card-header">
+        Simulação fisiológica
+    </div>
+
+    <div class="card-body">
+
+        <form method="get">
+
+            <input type="hidden" name="segmento" value="{{ segmento_selecionado }}">
+            <input type="hidden" name="inicio" value="{{ inicio }}">
+            <input type="hidden" name="amostras" value="{{ amostras }}">
+
+            <div class="form-check mb-3">
+                <input
+                    class="form-check-input"
+                    type="checkbox"
+                    name="usar_slider"
+                    value="1"
+                    id="usar_slider"
+                    {% if usar_slider %}checked{% endif %}
+                >
+                <label class="form-check-label" for="usar_slider">
+                    Usar valores simulados pelos sliders
+                </label>
+            </div>
+
+            <div class="mb-3">
+                <div class="d-flex flex-wrap gap-2">
+                    <button
+                        type="button"
+                        class="btn btn-outline-danger btn-sm scenario-btn"
+                        data-fc="75"
+                        data-imu="0.08"
+                        data-spo2="98"
+                        data-temp="36.5"
+                    >
+                        Repouso
+                    </button>
+                    <button
+                        type="button"
+                        class="btn btn-outline-danger btn-sm scenario-btn"
+                        data-fc="95"
+                        data-imu="0.35"
+                        data-spo2="98"
+                        data-temp="36.7"
+                    >
+                        Esforço leve
+                    </button>
+                    <button
+                        type="button"
+                        class="btn btn-outline-danger btn-sm scenario-btn"
+                        data-fc="120"
+                        data-imu="0.68"
+                        data-spo2="96"
+                        data-temp="37.2"
+                    >
+                        Esforço moderado
+                    </button>
+                    <button
+                        type="button"
+                        class="btn btn-outline-danger btn-sm scenario-btn"
+                        data-fc="140"
+                        data-imu="0.82"
+                        data-spo2="94"
+                        data-temp="37.8"
+                    >
+                        Esforço intenso
+                    </button>
+                    <button
+                        type="button"
+                        class="btn btn-outline-danger btn-sm scenario-btn"
+                        data-fc="118"
+                        data-imu="0.12"
+                        data-spo2="89"
+                        data-temp="37.6"
+                    >
+                        Hipoxemia
+                    </button>
+                </div>
+            </div>
+
+            <div class="row g-3">
+
+                <div class="col-md-4">
+                    <label>
+                        FC simulada:
+                        <strong id="fc_out">{{ fc_simulada|floatformat:0 }}</strong> bpm
+                    </label>
+                    <input
+                        type="range"
+                        min="40"
+                        max="180"
+                        step="1"
+                        class="form-range"
+                        name="fc"
+                        id="fc_slider"
+                        value="{{ fc_simulada|default:'75' }}"
+                        oninput="fc_out.innerText=this.value"
+                    >
+                </div>
+
+                <div class="col-md-4">
+                    <label>HRV calculada</label>
+                    <input
+                        type="text"
+                        class="form-control"
+                        value="{{ hrv_simulada|floatformat:1 }} ms"
+                        readonly
+                    >
+                </div>
+
+                <div class="col-md-4">
+                    <label>
+                        IMU:
+                        <strong id="imu_out">{{ imu_val }}</strong>
+                    </label>
+                    <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        class="form-range"
+                        name="imu"
+                        id="imu_slider"
+                        value="{{ imu_val|default:'0.1' }}"
+                        oninput="imu_out.innerText=this.value"
+                    >
+                </div>
+
+                <div class="col-md-4">
+                    <label>
+                        SpO₂:
+                        <strong id="spo2_out">{{ spo2_val }}</strong> %
+                    </label>
+                    <input
+                        type="range"
+                        min="80"
+                        max="100"
+                        step="1"
+                        class="form-range"
+                        name="spo2"
+                        id="spo2_slider"
+                        value="{{ spo2_val|default:'98' }}"
+                        oninput="spo2_out.innerText=this.value"
+                    >
+                </div>
+
+                <div class="col-md-4">
+                    <label>
+                        Temperatura:
+                        <strong id="temp_out">{{ temp_val }}</strong> °C
+                    </label>
+                    <input
+                        type="range"
+                        min="35"
+                        max="40"
+                        step="0.1"
+                        class="form-range"
+                        name="temp"
+                        id="temp_slider"
+                        value="{{ temp_val|default:'36.5' }}"
+                        oninput="temp_out.innerText=this.value"
+                    >
+                </div>
+
+            </div>
+
+            <button type="submit" class="btn btn-primary mt-3">
+                Simular
+            </button>
+
+        </form>
+
+    </div>
+</div>
+
+{% if resultado_fuzzy %}
+
+<div class="row g-4 mt-4">
+
+    <div class="col-md-3">
+        <div class="card border-primary">
+            <div class="card-body">
+                <small class="text-muted">
+                    Demanda Fuzzy
+                </small>
+                <h3>
+                    {{ resultado_fuzzy.demanda|floatformat:3 }}
+                </h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card border-success">
+            <div class="card-body">
+                <small class="text-muted">
+                    Classe
+                </small>
+                <h5>
+                    {{ resultado_fuzzy.classe }}
+                </h5>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card border-warning">
+            <div class="card-body">
+                <small class="text-muted">
+                    PAM Alvo
+                </small>
+                <h3>
+                    {{ resultado_fuzzy.PAM_alvo|floatformat:2 }}
+                </h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card border-info">
+            <div class="card-body">
+                <small class="text-muted">
+                    Método
+                </small>
+                <h5>
+                    {{ resultado_fuzzy.metodo }}
+                </h5>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% if resultado_fuzzy.fatores %}
+<div class="alert alert-light border mt-3">
+    <strong>Fatores clinicos fuzzy:</strong>
+    {{ resultado_fuzzy.fatores|join:", " }}
+</div>
+{% endif %}
+
+{% endif %}
+
+{% if validade_calibracao %}
+<div class="alert alert-{{ validade_calibracao.classe }} mt-3">
+    <div class="d-flex justify-content-between align-items-start gap-3">
+        <div>
+            <strong>Validade da calibração: {{ validade_calibracao.status }}</strong>
+            <p class="mb-2 mt-1">
+                {{ validade_calibracao.interpretacao }}
+            </p>
+            {% if validade_calibracao.fatores %}
+                <small>
+                    <strong>Fatores:</strong>
+                    {{ validade_calibracao.fatores|join:", " }}
+                </small>
+            {% endif %}
+        </div>
+        <div class="text-end">
+            <small class="d-block">Pontuação</small>
+            <strong>{{ validade_calibracao.pontos }}</strong>
+        </div>
+    </div>
+    <hr>
+    <div class="row g-2 small">
+        <div class="col-md-3">
+            PAM basal calibrada:
+            <strong>
+                {% if validade_calibracao.pam_base != None %}
+                    {{ validade_calibracao.pam_base }} mmHg
+                {% else %}
+                    -
+                {% endif %}
+            </strong>
+        </div>
+        <div class="col-md-3">
+            FC basal:
+            <strong>
+                {% if validade_calibracao.fc_base != None %}
+                    {{ validade_calibracao.fc_base }} bpm
+                {% else %}
+                    -
+                {% endif %}
+            </strong>
+        </div>
+        <div class="col-md-3">
+            HRV basal:
+            <strong>
+                {% if validade_calibracao.hrv_base != None %}
+                    {{ validade_calibracao.hrv_base }} ms
+                {% else %}
+                    -
+                {% endif %}
+            </strong>
+        </div>
+        <div class="col-md-3">
+            Fluxo basal assumido:
+            <strong>
+                {% if validade_calibracao.fluxo_base != None %}
+                    {{ validade_calibracao.fluxo_base }} L/min
+                {% else %}
+                    -
+                {% endif %}
+            </strong>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if acionar_sisc %}
+
+<div class="alert alert-danger mt-3">
+
+    <strong>
+        SISC
+    </strong>
+
+    <br>
+
+    {{ mensagem_sisc }}
+
+</div>
+
+{% endif %}
+
+{% if comparacao_pam_controle %}
+<div class="card shadow-sm border-0 mt-4">
+    <div class="card-header bg-white">
+        <strong>Fases da PAM: calibracao, validacao e operacao</strong>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-light border">
+            <strong>Fluxo metodologico:</strong>
+            a ABP do dataset calibra e valida o modelo; a sequencia DAV usa
+            a PAM Windkessel calibrada como estado operacional, sem usar a
+            PAM real como entrada do controle.
+        </div>
+        <div class="row g-3">
+            <div class="col-md-3">
+                <div class="card p-3 h-100">
+                    <small class="text-muted">PAM real ABP</small>
+                    <h3>{{ comparacao_pam_controle.pam_real_dataset }}</h3>
+                    <small class="text-muted">referencia de validacao</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card p-3 h-100">
+                    <small class="text-muted">PAM base estimada</small>
+                    <h3>
+                        {% if comparacao_pam_controle.pam_modelo_sem_abp != None %}
+                            {{ comparacao_pam_controle.pam_modelo_sem_abp }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </h3>
+                    <small class="text-muted">
+                        Delta real:
+                        {% if comparacao_pam_controle.delta_modelo_real != None %}
+                            {{ comparacao_pam_controle.delta_modelo_real }} mmHg
+                        {% else %}
+                            -
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card p-3 h-100">
+                    <small class="text-muted">PAM alvo fuzzy</small>
+                    <h3>
+                        {% if comparacao_pam_controle.pam_alvo_fuzzy != None %}
+                            {{ comparacao_pam_controle.pam_alvo_fuzzy }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </h3>
+                    <small class="text-muted">
+                        Delta real:
+                        {% if comparacao_pam_controle.delta_alvo_real != None %}
+                            {{ comparacao_pam_controle.delta_alvo_real }} mmHg
+                        {% else %}
+                            -
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card p-3 h-100">
+                    <small class="text-muted">PAM estimada no controle</small>
+                    <h3>
+                        {% if comparacao_pam_controle.pam_estimada_bomba != None %}
+                            {{ comparacao_pam_controle.pam_estimada_bomba }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </h3>
+                    <small class="text-muted">
+                        Delta real:
+                        {% if comparacao_pam_controle.delta_bomba_real != None %}
+                            {{ comparacao_pam_controle.delta_bomba_real }} mmHg
+                        {% else %}
+                            -
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+        </div>
+        <small class="text-muted d-block mt-3">
+            A PAM real vem do ABP do dataset e permanece apenas como validacao.
+            A PAM base estimada e a media da reconstrucao Windkessel
+            calibrada e e usada como PAM inicial da operacao DAV. A PAM alvo
+            fuzzy e o setpoint adaptativo; a PAM estimada no controle e a saida
+            do primeiro passo da planta DAV/Windkessel.
+        </small>
+    </div>
+</div>
+{% endif %}
+
+<div class="row g-4 mt-4">
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <small class="text-muted">RPM atual</small>
+                <h3>{{ resultado_dav.rpm_atual|floatformat:0 }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <small class="text-muted">Fluxo HM3</small>
+                <h3>{{ resultado_dav.fluxo_estimado|floatformat:2 }}</h3>
+                <small class="text-muted">L/min</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <small class="text-muted">ΔP bomba</small>
+                <h3>{{ resultado_dav.delta_p|floatformat:1 }}</h3>
+                <small class="text-muted">mmHg</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <small class="text-muted">Potência</small>
+                <h3>{{ resultado_dav.potencia|floatformat:2 }}</h3>
+                <small class="text-muted">W</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <small class="text-muted">Eficiência</small>
+                <h3>{{ resultado_dav.eficiencia|floatformat:2 }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <small class="text-muted">PAM estimada</small>
+                <h3>{{ resultado_dav.pam_estimada|floatformat:2 }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <small class="text-muted">RPM sugerido</small>
+                <h3>{{ resultado_dav.rpm_sugerido|floatformat:0 }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <small class="text-muted">Erro PAM</small>
+                <h3>{{ resultado_dav.erro|floatformat:2 }}</h3>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endif %}
+
+<div class="row g-4 mt-4">
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <small class="text-muted">
+                    Tau mediana
+                </small>
+                <h4>
+                    {{ tau_modelo|floatformat:3 }}
+                </h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <small class="text-muted">
+                    Metodo PAM
+                </small>
+                <h4>
+                    Windkessel
+                </h4>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <small class="text-muted">
+                    Offset calibracao
+                </small>
+                <h4>
+                    {{ offset_calibracao|floatformat:3 }}
+                </h4>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="row g-4 mt-4">
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <small class="text-muted">Taus aceitas</small>
+                <h3>{{ taus|length }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <small class="text-muted">Resultados Tau</small>
+                <h3>{{ resultados_tau|length }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="col-md-3">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <small class="text-muted">
+                Pressão de pulso normalizada
+            </small>
+            <h3>
+                {{ pressao_pulso_normalizada|floatformat:2 }}
+            </h3>
+            <small class="text-muted">PP/PAM; não é PI do DAV</small>
+        </div>
+    </div>
+</div>
+<div class="col-md-3">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+        <small>R efetiva dinâmica</small>
+        <h4>{{ r_eff_dinamica }}</h4>
+        </div>
+    </div>
+</div>
+
+<div class="col-md-3">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <small class="text-muted">PI estimado do DAV</small>
+            <h3>
+                {% if pi_dav %}
+                    {{ pi_dav.valor|floatformat:2 }}
+                {% else %}
+                    -
+                {% endif %}
+            </h3>
+            <small class="text-muted">
+                {% if pi_dav %}
+                    {{ pi_dav.classe }}
+                {% else %}
+                    baseado na potência simulada
+                {% endif %}
+            </small>
+        </div>
+    </div>
+</div>
+
+<div class="col-md-3">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <small class="text-muted">Potência média</small>
+            <h3>
+                {% if pi_dav %}
+                    {{ pi_dav.potencia_media|floatformat:2 }}
+                {% else %}
+                    -
+                {% endif %}
+            </h3>
+            <small class="text-muted">W na janela do PI</small>
+        </div>
+    </div>
+</div>
+
+{% if pi_dav %}
+<div class="col-12">
+    <div class="alert alert-light border mt-2">
+        <strong>Leitura do PI estimado do DAV:</strong>
+        {{ pi_dav.interpretacao }}
+        <br>
+        <small class="text-muted">
+            PI = (Pmax - Pmin) / Pavg. Pmax:
+            {{ pi_dav.potencia_max|floatformat:2 }} W; Pmin:
+            {{ pi_dav.potencia_min|floatformat:2 }} W; Pavg:
+            {{ pi_dav.potencia_media|floatformat:2 }} W; janela:
+            {{ pi_dav.janela_s|floatformat:0 }} s; amostras:
+            {{ pi_dav.n_amostras }}; desvio padrão:
+            {{ pi_dav.potencia_std|floatformat:6 }} W. O valor apresentado
+            é uma estimativa do modelo e não uma leitura direta de dispositivo
+            comercial.
+            <br>
+            Potências da janela: {{ pi_dav.potencias_janela }}
+            <br>
+            RPM da janela: {{ pi_dav.rpm_janela }}
+            <br>
+            Fluxo da janela: {{ pi_dav.fluxo_janela }}
+            <br>
+            DeltaP da janela: {{ pi_dav.delta_p_janela }}
+        </small>
+    </div>
+</div>
+{% endif %}
+
+<div class="col-md-3">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <small class="text-muted">FC ECG/IA</small>
+            <h3>{{ metricas_ecg.fc|floatformat:2 }}</h3>
+        </div>
+    </div>
+</div>
+
+<div class="col-md-3">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <small class="text-muted">FC ABP</small>
+            <h3>{{ metricas_fc_abp.fc|floatformat:2 }}</h3>
+        </div>
+    </div>
+</div>
+<div class="col-md-3">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <small class="text-muted">
+                Erro FC ECG × ABP
+            </small>
+            <h3>
+                {{ erro_fc|floatformat:2 }}
+            </h3>
+        </div>
+    </div>
+</div>
+
+{% if canais_json %}
+
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+<script>
+document.querySelectorAll(".scenario-btn").forEach((botao) => {
+    botao.addEventListener("click", () => {
+        const form = botao.closest("form");
+        const usarSlider = document.getElementById("usar_slider");
+        const fc = document.getElementById("fc_slider");
+        const imu = document.getElementById("imu_slider");
+        const spo2 = document.getElementById("spo2_slider");
+        const temp = document.getElementById("temp_slider");
+
+        if (usarSlider) {
+            usarSlider.checked = true;
+        }
+
+        if (fc) {
+            fc.value = botao.dataset.fc;
+            fc_out.innerText = fc.value;
+        }
+
+        if (imu) {
+            imu.value = botao.dataset.imu;
+            imu_out.innerText = imu.value;
+        }
+
+        if (spo2) {
+            spo2.value = botao.dataset.spo2;
+            spo2_out.innerText = spo2.value;
+        }
+
+        if (temp) {
+            temp.value = botao.dataset.temp;
+            temp_out.innerText = temp.value;
+        }
+
+        if (form) {
+            form.submit();
+        }
+    });
+});
+
+    const canais = {{ canais_json|safe }};
+    const picosR = {{ picos_json|default:"[]"|safe }};
+    const probIA = {{ prob_ia_json|default:"null"|safe }};
+    const janelasQRS = {{ janelas_qrs_json|default:"[]"|safe }};
+
+    const container = document.getElementById("graficos_canais");
+
+    container.innerHTML = "";
+
+    for (const nome in canais) {
+
+        const div = document.createElement("div");
+
+        div.style.height = "300px";
+        div.style.marginBottom = "40px";
+
+        container.appendChild(div);
+
+        const tracesCanal = [
+            {
+                y: canais[nome],
+                mode: "lines",
+                name: nome
+            }
+        ];
+
+        let layout = {
+            title: nome,
+            margin: { t: 40 },
+            xaxis: {
+                title: "Amostras"
+            },
+            yaxis: {
+                title: "Valor"
+            }
+        };
+
+        {% if resultado_abp %}
+        if (nome === "ABP") {
+
+            const picosABP = {{ resultado_abp.picos|default:"[]"|safe }};
+
+            if (picosABP.length > 0) {
+
+                const yABP = picosABP.map(
+                    i => canais["ABP"][i]
+                );
+
+                tracesCanal.push({
+                    x: picosABP,
+                    y: yABP,
+                    mode: "markers",
+                    name: "Picos ABP",
+                    marker: {
+                        size: 7,
+                        color: "green"
+                    }
+                });
+            }
+        }
+        {% endif %}
+
+        if (
+            nome === "II"
+            && picosR.length > 0
+        ) {
+
+            const yPicos = picosR.map(
+                i => canais["II"][i]
+            );
+
+            tracesCanal.push({
+                x: picosR,
+                y: yPicos,
+                mode: "markers",
+                name: "Picos R refinados",
+                marker: {
+                    size: 8,
+                    color: "red"
+                }
+            });
+
+            if (janelasQRS.length > 0) {
+
+                layout.shapes = janelasQRS.map(j => ({
+                    type: "rect",
+                    xref: "x",
+                    yref: "paper",
+                    x0: j.inicio,
+                    x1: j.fim,
+                    y0: 0,
+                    y1: 1,
+                    fillcolor: "rgba(255, 0, 0, 0.15)",
+                    line: {
+                        width: 0
+                    }
+                }));
+            }
+        }
+
+        
+
+        Plotly.newPlot(
+            div,
+            tracesCanal,
+            layout
+        );
+    }
+
+    if (probIA) {
+
+        const divIA = document.createElement("div");
+
+        divIA.style.height = "300px";
+        divIA.style.marginBottom = "40px";
+
+        container.appendChild(divIA);
+
+        const xIA = probIA.map(
+            (_, i) => i
+        );
+
+        Plotly.newPlot(
+            divIA,
+            [
+                {
+                    x: xIA,
+                    y: probIA,
+                    mode: "lines",
+                    name: "Ativação IA"
+                }
+            ],
+            {
+                title: "Ativação temporal da IA — região QRS",
+                margin: { t: 40 },
+                xaxis: {
+                    title: "Amostras"
+                },
+                yaxis: {
+                    title: "Ativação"
+                }
+            }
+        );
+    }
+
+const resultadosTau =
+    {{ resultados_tau_json|safe }};
+
+if (
+    resultadosTau
+    && resultadosTau.length > 0
+) {
+
+    const taus =
+        resultadosTau.map(r => r.tau);
+
+    const x =
+        taus.map((_, i) => i + 1);
+
+    const divTau =
+        document.getElementById(
+            "grafico_tau"
+        );
+
+    Plotly.newPlot(
+        divTau,
+        [
+            {
+                x: x,
+                y: taus,
+                mode: "lines+markers",
+                name: "Tau"
+            }
+        ],
+        {
+            title: "Tau por batimento",
+            xaxis: {
+                title: "Batimento"
+            },
+            yaxis: {
+                title: "Tau (s)"
+            }
+        }
+    );
+}
+
+const pamBatimentos =
+    {{ pam_batimentos_json|safe }};
+
+const pamAlvoControle =
+    {{ pam_alvo_controle_json|default:"null"|safe }};
+
+const pamEstimadaBomba =
+    {{ pam_estimada_bomba_json|default:"null"|safe }};
+
+if (
+    pamBatimentos
+    && pamBatimentos.length > 0
+) {
+
+    const xPam =
+        pamBatimentos.map(
+            (_, i) => i + 1
+        );
+
+    const divPam =
+        document.getElementById(
+            "grafico_pam"
+        );
+
+    const tracesPam = [
+        {
+            x: xPam,
+            y: pamBatimentos,
+            mode: "lines+markers",
+            name: "PAM real dataset"
+        }
+    ];
+
+    if (pamAlvoControle !== null) {
+        tracesPam.push({
+            x: xPam,
+            y: xPam.map(() => pamAlvoControle),
+            mode: "lines",
+            name: "PAM alvo fuzzy",
+            line: {
+                color: "#ff7f0e",
+                width: 2,
+                dash: "dot"
+            }
+        });
+    }
+
+    const indiceTraceAtual = tracesPam.length;
+    tracesPam.push({
+        x: [xPam[0]],
+        y: [pamBatimentos[0]],
+        mode: "markers",
+        name: "Batimento atual",
+        marker: {
+            color: "#111827",
+            size: 13,
+            symbol: "diamond"
+        }
+    });
+
+    Plotly.newPlot(
+        divPam,
+        tracesPam,
+        {
+            title: "PAM real x PAM alvo do controle",
+            xaxis: {
+                title: "Batimento"
+            },
+            yaxis: {
+                title: "PAM (mmHg)"
+            }
+        }
+    );
+
+    const divDeltaControle =
+        document.getElementById("grafico_pam_delta_controle");
+    const tracesDeltaControle = [];
+
+    if (pamEstimadaBomba !== null) {
+        tracesDeltaControle.push({
+            x: xPam,
+            y: pamBatimentos.map(v => pamEstimadaBomba - v),
+            type: "bar",
+            name: "Delta bomba - real",
+            marker: {
+                color: "#d62728"
+            },
+            opacity: 0.65
+        });
+    }
+
+    if (pamAlvoControle !== null) {
+        tracesDeltaControle.push({
+            x: xPam,
+            y: pamBatimentos.map(v => pamAlvoControle - v),
+            mode: "lines",
+            name: "Delta alvo - real",
+            line: {
+                color: "#ff7f0e",
+                width: 2,
+                dash: "dot"
+            }
+        });
+    }
+
+    const indiceTraceDeltaAtual = tracesDeltaControle.length;
+    tracesDeltaControle.push({
+        x: [xPam[0]],
+        y: [
+            pamEstimadaBomba === null
+                ? 0
+                : pamEstimadaBomba - pamBatimentos[0]
+        ],
+        mode: "markers",
+        name: "Delta atual",
+        marker: {
+            color: "#111827",
+            size: 11,
+            symbol: "diamond"
+        }
+    });
+
+    Plotly.newPlot(
+        divDeltaControle,
+        tracesDeltaControle,
+        {
+            title: "Diferenca entre controle e PAM real",
+            height: 260,
+            xaxis: {
+                title: "Batimento"
+            },
+            yaxis: {
+                title: "Delta (mmHg)",
+                zeroline: true,
+                zerolinecolor: "#111827"
+            },
+            margin: {
+                t: 40
+            }
+        }
+    );
+
+    const controlePlayPam =
+        document.getElementById("controle_play_pam");
+    const btnPlayPam =
+        document.getElementById("btn_play_pam");
+    const btnResetPam =
+        document.getElementById("btn_reset_pam");
+    const sliderPamTempo =
+        document.getElementById("slider_pam_tempo");
+
+    const outBatimento =
+        document.getElementById("pam_play_batimento");
+    const outPamReal =
+        document.getElementById("pam_play_real");
+    const outPamBomba =
+        document.getElementById("pam_play_bomba");
+    const outPamAlvo =
+        document.getElementById("pam_play_alvo");
+    const outDeltaBomba =
+        document.getElementById("pam_play_delta_bomba");
+    const outDeltaAlvo =
+        document.getElementById("pam_play_delta_alvo");
+
+    let indicePamAtual = 0;
+    let timerPam = null;
+
+    function formatarPam(valor) {
+        if (valor === null || valor === undefined || Number.isNaN(valor)) {
+            return "-";
+        }
+
+        return Number(valor).toFixed(2);
+    }
+
+    function atualizarPlayPam(indice) {
+        indicePamAtual = Math.max(
+            0,
+            Math.min(indice, pamBatimentos.length - 1)
+        );
+
+        const xAtual = xPam[indicePamAtual];
+        const pamRealAtual = pamBatimentos[indicePamAtual];
+
+        Plotly.restyle(
+            divPam,
+            {
+                x: [[xAtual]],
+                y: [[pamRealAtual]]
+            },
+            [indiceTraceAtual]
+        );
+
+        Plotly.restyle(
+            divDeltaControle,
+            {
+                x: [[xAtual]],
+                y: [[
+                    pamEstimadaBomba === null
+                        ? 0
+                        : pamEstimadaBomba - pamRealAtual
+                ]]
+            },
+            [indiceTraceDeltaAtual]
+        );
+
+        sliderPamTempo.value = String(xAtual);
+        outBatimento.innerText = xAtual;
+        outPamReal.innerText = formatarPam(pamRealAtual);
+        outPamBomba.innerText = formatarPam(pamEstimadaBomba);
+        outPamAlvo.innerText = formatarPam(pamAlvoControle);
+
+        outDeltaBomba.innerText =
+            pamEstimadaBomba === null
+                ? "-"
+                : formatarPam(pamEstimadaBomba - pamRealAtual);
+
+        outDeltaAlvo.innerText =
+            pamAlvoControle === null
+                ? "-"
+                : formatarPam(pamAlvoControle - pamRealAtual);
+    }
+
+    function pararPlayPam() {
+        if (timerPam) {
+            clearInterval(timerPam);
+            timerPam = null;
+        }
+
+        btnPlayPam.innerText = "Play";
+    }
+
+    controlePlayPam.style.display = "block";
+    sliderPamTempo.max = String(pamBatimentos.length);
+    atualizarPlayPam(0);
+
+    btnPlayPam.addEventListener("click", () => {
+        if (timerPam) {
+            pararPlayPam();
+            return;
+        }
+
+        btnPlayPam.innerText = "Pausar";
+
+        timerPam = setInterval(() => {
+            if (indicePamAtual >= pamBatimentos.length - 1) {
+                pararPlayPam();
+                return;
+            }
+
+            atualizarPlayPam(indicePamAtual + 1);
+        }, 450);
+    });
+
+    btnResetPam.addEventListener("click", () => {
+        pararPlayPam();
+        atualizarPlayPam(0);
+    });
+
+    sliderPamTempo.addEventListener("input", () => {
+        pararPlayPam();
+        atualizarPlayPam(Number(sliderPamTempo.value) - 1);
+    });
+}
+
+if (
+    resultadosTau
+    && pamBatimentos
+    && resultadosTau.length > 0
+) {
+
+    const tausScatter =
+        resultadosTau.map(r => r.tau);
+
+    const divScatter =
+        document.getElementById(
+            "grafico_tau_pam"
+        );
+
+    Plotly.newPlot(
+        divScatter,
+        [
+            {
+                x: pamBatimentos,
+                y: tausScatter,
+                mode: "markers",
+                name: "Tau vs PAM"
+            }
+        ],
+        {
+            title: "Correlação Tau × PAM",
+            xaxis: {
+                title: "PAM (mmHg)"
+            },
+            yaxis: {
+                title: "Tau (s)"
+            }
+        }
+    );
+}
+
+const pamModeloBatimentos =
+    {{ pam_modelo_batimentos_json|default:"[]"|safe }};
+
+const pamReconstruidaAbp =
+    {{ pam_reconstruida_abp_json|default:"[]"|safe }};
+
+const tauModeloCalibrado =
+    {{ tau_modelo_json|default:"null"|safe }};
+
+const offsetCalibracao =
+    {{ offset_calibracao_json|default:"null"|safe }};
+
+function mediaValores(valores) {
+    const limpos = valores.filter(
+        (valor) => Number.isFinite(Number(valor))
+    );
+
+    if (limpos.length === 0) {
+        return null;
+    }
+
+    return limpos.reduce(
+        (soma, valor) => soma + Number(valor),
+        0
+    ) / limpos.length;
+}
+
+if (
+    resultadosTau
+    && resultadosTau.length > 0
+    && pamBatimentos
+    && pamBatimentos.length > 0
+    && pamReconstruidaAbp
+    && pamReconstruidaAbp.length > 0
+    && pamModeloBatimentos
+    && pamModeloBatimentos.length > 0
+) {
+    const melhorAjusteTau = resultadosTau
+        .filter((item) => item.t && item.diastole && item.ajuste)
+        .sort((a, b) => Number(b.r2 || 0) - Number(a.r2 || 0))[0];
+
+    if (melhorAjusteTau) {
+        Plotly.newPlot(
+            "grafico_passo_tau_exemplo",
+            [
+                {
+                    x: melhorAjusteTau.t,
+                    y: melhorAjusteTau.diastole,
+                    mode: "lines+markers",
+                    name: "ABP diastolica real",
+                    line: { color: "#1f77b4", width: 3 }
+                },
+                {
+                    x: melhorAjusteTau.t,
+                    y: melhorAjusteTau.ajuste,
+                    mode: "lines",
+                    name: "Exponencial ajustada",
+                    line: { color: "#d62728", width: 3, dash: "dash" }
+                }
+            ],
+            {
+                title: "1. Ajuste de tau: P(t) = P0 e^(-t/tau) + P∞",
+                height: 380,
+                xaxis: { title: "Tempo da diastole util (s)" },
+                yaxis: { title: "Pressao (mmHg)" },
+                annotations: [
+                    {
+                        x: 0.02,
+                        y: 0.95,
+                        xref: "paper",
+                        yref: "paper",
+                        text:
+                            "tau = " + Number(melhorAjusteTau.tau).toFixed(3)
+                            + " s | R2 = "
+                            + Number(melhorAjusteTau.r2).toFixed(3),
+                        showarrow: false,
+                        align: "left",
+                        bgcolor: "rgba(255,255,255,0.85)"
+                    }
+                ]
+            }
+        );
+    }
+
+    const tausValidos = resultadosTau
+        .map((item) => Number(item.tau))
+        .filter((valor) => Number.isFinite(valor));
+    const xTauPasso = tausValidos.map((_, i) => i + 1);
+
+    Plotly.newPlot(
+        "grafico_passo_tau_distribuicao",
+        [
+            {
+                x: xTauPasso,
+                y: tausValidos,
+                mode: "lines+markers",
+                name: "Tau por batimento",
+                line: { color: "#1f77b4", width: 2 }
+            },
+            {
+                x: xTauPasso,
+                y: xTauPasso.map(() => tauModeloCalibrado),
+                mode: "lines",
+                name: "Tau customizado",
+                line: { color: "#d62728", width: 3, dash: "dash" }
+            }
+        ],
+        {
+            title: "2. Customizacao: tau final pela mediana dos ciclos aceitos",
+            height: 360,
+            xaxis: { title: "Batimento aceito" },
+            yaxis: { title: "Tau (s)" }
+        }
+    );
+
+    const nPasso = Math.min(
+        pamBatimentos.length,
+        pamReconstruidaAbp.length,
+        pamModeloBatimentos.length
+    );
+    const xPasso = Array.from({ length: nPasso }, (_, i) => i + 1);
+    const pamRealPasso = pamBatimentos.slice(0, nPasso);
+    const pamBrutaPasso = pamReconstruidaAbp.slice(0, nPasso);
+    const pamBasePasso = pamModeloBatimentos.slice(0, nPasso);
+    const offsetLinha = xPasso.map(() => offsetCalibracao);
+
+    const pamBrutaMedia = mediaValores(pamBrutaPasso);
+    const pamBaseMedia = mediaValores(pamBasePasso);
+
+    const cardPamBruta = document.getElementById("pam_bruta_media_card");
+    const cardPamBase = document.getElementById("pam_base_media_card");
+
+    if (cardPamBruta && pamBrutaMedia !== null) {
+        cardPamBruta.textContent = pamBrutaMedia.toFixed(3) + " mmHg";
+    }
+
+    if (cardPamBase && pamBaseMedia !== null) {
+        cardPamBase.textContent = pamBaseMedia.toFixed(3) + " mmHg";
+    }
+
+    Plotly.newPlot(
+        "grafico_passo_pam_bruta_offset",
+        [
+            {
+                x: xPasso,
+                y: pamRealPasso,
+                mode: "lines+markers",
+                name: "PAM real ABP",
+                line: { color: "#1f77b4", width: 3 }
+            },
+            {
+                x: xPasso,
+                y: pamBrutaPasso,
+                mode: "lines+markers",
+                name: "PAM bruta da exponencial",
+                line: { color: "#9467bd", width: 2, dash: "dot" }
+            },
+            {
+                x: xPasso,
+                y: pamBasePasso,
+                mode: "lines+markers",
+                name: "PAM base estimada",
+                line: { color: "#d62728", width: 3, dash: "dash" }
+            },
+            {
+                x: xPasso,
+                y: offsetLinha,
+                mode: "lines",
+                name: "Offset aplicado",
+                line: { color: "#ff7f0e", width: 2 },
+                yaxis: "y2"
+            }
+        ],
+        {
+            title: "3. PAM bruta + offset = PAM base estimada",
+            height: 420,
+            xaxis: { title: "Batimento" },
+            yaxis: { title: "PAM (mmHg)" },
+            yaxis2: {
+                title: "Offset (mmHg)",
+                overlaying: "y",
+                side: "right",
+                showgrid: false
+            }
+        }
+    );
+}
+
+const observadorPressorico =
+    {{ observador_pressorico_json|default:"[]"|safe }};
+
+const observadorWindkesselFases =
+    {{ observador_windkessel_fases_json|default:"null"|safe }};
+
+if (
+    observadorWindkesselFases
+    && observadorWindkesselFases.ciclos
+    && observadorWindkesselFases.ciclos.length > 0
+) {
+    const ciclosFases =
+        observadorWindkesselFases.ciclos;
+    const ciclosValidosFases =
+        ciclosFases.filter((item) => item.valido);
+    const cicloExemplo =
+        ciclosValidosFases.length > 0
+            ? ciclosValidosFases[0]
+            : ciclosFases[0];
+
+    if (
+        cicloExemplo
+        && cicloExemplo.tempo
+        && cicloExemplo.p_modelo
+    ) {
+        Plotly.newPlot(
+            "grafico_windkessel_fases_ciclo",
+            [
+                {
+                    x: cicloExemplo.tempo,
+                    y: cicloExemplo.abp_real,
+                    mode: "lines",
+                    name: "ABP real",
+                    line: { color: "#1f77b4", width: 3 }
+                },
+                {
+                    x: cicloExemplo.tempo,
+                    y: cicloExemplo.p_modelo,
+                    mode: "lines",
+                    name: "P modelo",
+                    line: { color: "#d62728", width: 2, dash: "dash" }
+                },
+                {
+                    x: [cicloExemplo.delta_t_em],
+                    y: [cicloExemplo.P0],
+                    mode: "markers",
+                    name: "t0",
+                    marker: { color: "#ff7f0e", size: 10 }
+                },
+                {
+                    x: [cicloExemplo.t_s],
+                    y: [cicloExemplo.PAS_estimada],
+                    mode: "markers",
+                    name: "PAS estimada",
+                    marker: { color: "#d62728", size: 10 }
+                },
+                {
+                    x: [cicloExemplo.tempo[cicloExemplo.tempo.length - 1]],
+                    y: [cicloExemplo.PAD_estimada],
+                    mode: "markers",
+                    name: "PAD estimada",
+                    marker: { color: "#2ca02c", size: 10 }
+                }
+            ],
+            {
+                title: "Windkessel por fases - ciclo " + cicloExemplo.ciclo,
+                height: 420,
+                xaxis: { title: "Tempo relativo ao pico R (s)" },
+                yaxis: { title: "Pressao (mmHg)" },
+                shapes: [
+                    {
+                        type: "line",
+                        x0: 0,
+                        x1: 0,
+                        y0: 0,
+                        y1: 1,
+                        xref: "x",
+                        yref: "paper",
+                        line: { color: "#111827", dash: "dot" }
+                    },
+                    {
+                        type: "line",
+                        x0: cicloExemplo.delta_t_em,
+                        x1: cicloExemplo.delta_t_em,
+                        y0: 0,
+                        y1: 1,
+                        xref: "x",
+                        yref: "paper",
+                        line: { color: "#ff7f0e", dash: "dot" }
+                    },
+                    {
+                        type: "line",
+                        x0: cicloExemplo.t_s,
+                        x1: cicloExemplo.t_s,
+                        y0: 0,
+                        y1: 1,
+                        xref: "x",
+                        yref: "paper",
+                        line: { color: "#d62728", dash: "dot" }
+                    },
+                    {
+                        type: "line",
+                        x0: cicloExemplo.RR_s,
+                        x1: cicloExemplo.RR_s,
+                        y0: 0,
+                        y1: 1,
+                        xref: "x",
+                        yref: "paper",
+                        line: { color: "#111827", dash: "dash" }
+                    }
+                ]
+            }
+        );
+    }
+
+    if (ciclosValidosFases.length > 0) {
+        const xFases =
+            ciclosValidosFases.map((item) => item.ciclo);
+        const pamRealFases =
+            ciclosValidosFases.map((item) => item.PAM_real);
+        const pamFormulaFases =
+            ciclosValidosFases.map((item) => item.PAM_estimada_formula);
+        const pamIntegralFases =
+            ciclosValidosFases.map((item) => item.PAM_estimada_integral);
+
+        Plotly.newPlot(
+            "grafico_windkessel_fases_pam",
+            [
+                {
+                    x: xFases,
+                    y: pamRealFases,
+                    mode: "lines+markers",
+                    name: "PAM real",
+                    line: { color: "#1f77b4", width: 3 }
+                },
+                {
+                    x: xFases,
+                    y: pamFormulaFases,
+                    mode: "lines+markers",
+                    name: "PAM formula PAS/PAD",
+                    line: { color: "#ff7f0e", width: 2, dash: "dash" }
+                },
+                {
+                    x: xFases,
+                    y: pamIntegralFases,
+                    mode: "lines+markers",
+                    name: "PAM integral",
+                    line: { color: "#d62728", width: 2, dash: "dot" }
+                }
+            ],
+            {
+                title: "PAM real x PAM estimada - Windkessel por fases",
+                height: 420,
+                xaxis: { title: "Ciclo" },
+                yaxis: { title: "PAM (mmHg)" }
+            }
+        );
+
+        const minDisp =
+            Math.min(...pamRealFases, ...pamIntegralFases);
+        const maxDisp =
+            Math.max(...pamRealFases, ...pamIntegralFases);
+
+        Plotly.newPlot(
+            "grafico_windkessel_fases_disp",
+            [
+                {
+                    x: pamRealFases,
+                    y: pamIntegralFases,
+                    mode: "markers",
+                    name: "Ciclos validos",
+                    marker: { color: "#d62728", size: 8 }
+                },
+                {
+                    x: [minDisp, maxDisp],
+                    y: [minDisp, maxDisp],
+                    mode: "lines",
+                    name: "y = x",
+                    line: { color: "#111827", dash: "dash" }
+                }
+            ],
+            {
+                title: "Dispersao: PAM real x PAM integral",
+                height: 420,
+                xaxis: { title: "PAM real (mmHg)" },
+                yaxis: { title: "PAM estimada integral (mmHg)" }
+            }
+        );
+    }
+}
+
+if (
+    observadorPressorico
+    && observadorPressorico.length > 0
+) {
+    const xObs =
+        observadorPressorico.map((item) => item.batimento);
+    const pamRealObs =
+        observadorPressorico.map((item) => item.pam_real);
+    const pamEstObs =
+        observadorPressorico.map((item) => item.pam_estimada);
+    const erroObs =
+        pamRealObs.map(
+            (valor, i) => Number((valor - pamEstObs[i]).toFixed(3))
+        );
+
+    Plotly.newPlot(
+        "grafico_observador_pam",
+        [
+            {
+                x: xObs,
+                y: pamRealObs,
+                mode: "lines+markers",
+                name: "PAM real ABP",
+                line: {
+                    color: "#1f77b4",
+                    width: 3
+                }
+            },
+            {
+                x: xObs,
+                y: pamEstObs,
+                mode: "lines+markers",
+                name: "PAM estimada por PAS/PAD",
+                line: {
+                    color: "#d62728",
+                    width: 2,
+                    dash: "dash"
+                }
+            },
+            {
+                x: xObs,
+                y: erroObs,
+                type: "bar",
+                name: "Erro real - estimada",
+                marker: {
+                    color: "#6c757d"
+                },
+                opacity: 0.65,
+                yaxis: "y2",
+                xaxis: "x2"
+            }
+        ],
+        {
+            title: "Observador pressorico: PAM real x PAM estimada",
+            height: 520,
+            legend: {
+                orientation: "h",
+                x: 0,
+                y: 1.12
+            },
+            xaxis: {
+                title: "",
+                domain: [0, 1],
+                anchor: "y"
+            },
+            xaxis2: {
+                title: "Batimento",
+                domain: [0, 1],
+                anchor: "y2"
+            },
+            yaxis: {
+                title: "PAM (mmHg)",
+                domain: [0.32, 1]
+            },
+            yaxis2: {
+                title: "Erro",
+                domain: [0, 0.22],
+                zeroline: true,
+                zerolinecolor: "#111827"
+            }
+        }
+    );
+}
+
+if (
+    pamBatimentos
+    && pamModeloBatimentos
+    && pamBatimentos.length > 0
+    && pamModeloBatimentos.length > 0
+) {
+
+    const n =
+        Math.min(
+            pamBatimentos.length,
+            pamModeloBatimentos.length
+        );
+
+    const pamReal =
+        pamBatimentos.slice(0, n);
+
+    const pamModelo =
+        pamModeloBatimentos.slice(0, n);
+
+    const pamReconstruida =
+        pamReconstruidaAbp.slice(0, n);
+
+    const x =
+        pamReal.map((_, i) => i + 1);
+
+    const erroPam =
+        pamReal.map(
+            (valor, i) => Number((valor - pamModelo[i]).toFixed(3))
+        );
+
+    const divPamComparacao =
+        document.getElementById(
+            "grafico_pam_real_modelo"
+        );
+
+    Plotly.newPlot(
+        divPamComparacao,
+        [
+            {
+                x: x,
+                y: pamReal,
+                mode: "lines+markers",
+                name: "PAM real ABP (validacao)",
+                line: {
+                    color: "#1f77b4",
+                    width: 3
+                },
+                marker: {
+                    color: "#1f77b4",
+                    size: 6
+                },
+                yaxis: "y"
+            },
+            {
+                x: x,
+                y: pamModelo,
+                mode: "lines+markers",
+                name: "PAM base estimada",
+                line: {
+                    color: "#d62728",
+                    width: 2,
+                    dash: "dash"
+                },
+                marker: {
+                    color: "white",
+                    line: {
+                        color: "#d62728",
+                        width: 2
+                    },
+                    size: 8,
+                    symbol: "circle-open"
+                },
+                yaxis: "y"
+            },
+            {
+                x: x,
+                y: pamReconstruida,
+                mode: "lines",
+                name: "PAM bruta antes do offset",
+                line: {
+                    color: "#9467bd",
+                    width: 1.5,
+                    dash: "dot"
+                },
+                opacity: 0.75,
+                yaxis: "y"
+            },
+            {
+                x: x,
+                y: erroPam,
+                type: "bar",
+                name: "Erro real - modelo",
+                marker: {
+                    color: "#6c757d"
+                },
+                opacity: 0.65,
+                yaxis: "y2",
+                xaxis: "x2"
+            }
+        ],
+        {
+            title: "Validacao: PAM real ABP x PAM base estimada",
+            height: 520,
+            legend: {
+                orientation: "h",
+                x: 0,
+                y: 1.12
+            },
+            xaxis: {
+                title: "",
+                domain: [0, 1],
+                anchor: "y"
+            },
+            xaxis2: {
+                title: "Batimento",
+                domain: [0, 1],
+                anchor: "y2"
+            },
+            yaxis: {
+                title: "PAM (mmHg)",
+                domain: [0.32, 1]
+            },
+            yaxis2: {
+                title: "Erro",
+                domain: [0, 0.22],
+                zeroline: true,
+                zerolinecolor: "#111827"
+            }
+        }
+    );
+}
+
+const ppBatimentos =
+    {{ pp_batimentos_json|default:"[]"|safe }};
+
+if (
+    resultadosTau
+    && ppBatimentos
+    && resultadosTau.length > 0
+) {
+
+    const tausScatter =
+        resultadosTau.map(r => r.tau);
+
+    const divPP =
+        document.getElementById(
+            "grafico_tau_pp"
+        );
+
+    Plotly.newPlot(
+        divPP,
+        [
+            {
+                x: ppBatimentos.slice(
+                    0,
+                    tausScatter.length
+                ),
+                y: tausScatter,
+                mode: "markers",
+                name: "Tau × PP"
+            }
+        ],
+        {
+            title: "Correlação Tau × Pressão de Pulso",
+            xaxis: {
+                title: "PP (mmHg)"
+            },
+            yaxis: {
+                title: "Tau (s)"
+            }
+        }
+    );
+}
+const historicoDAV =
+    {{ historico_dav_json|default:"null"|safe }};
+
+if (
+    historicoDAV
+    && historicoDAV.ciclos
+) {
+
+    Plotly.newPlot(
+        document.getElementById("grafico_dav_pam"),
+        [
+            {
+                x: historicoDAV.ciclos,
+                y: historicoDAV.pam,
+                mode: "lines+markers",
+                name: "PAM estimada"
+            }
+        ],
+        {
+            title: "Controle DAV — PAM estimada",
+            xaxis: { title: "Ciclo" },
+            yaxis: { title: "PAM (mmHg)" }
+        }
+    );
+
+    Plotly.newPlot(
+        document.getElementById("grafico_dav_rpm"),
+        [
+            {
+                x: historicoDAV.ciclos,
+                y: historicoDAV.rpm,
+                mode: "lines+markers",
+                name: "RPM"
+            }
+        ],
+        {
+            title: "Controle DAV — RPM",
+            xaxis: { title: "Ciclo" },
+            yaxis: { title: "RPM" }
+        }
+    );
+
+    Plotly.newPlot(
+        document.getElementById("grafico_dav_fluxo"),
+        [
+            {
+                x: historicoDAV.ciclos,
+                y: historicoDAV.fluxo,
+                mode: "lines+markers",
+                name: "Fluxo estimado"
+            }
+        ],
+
+        {
+            title: "Controle DAV — Fluxo estimado",
+            xaxis: { title: "Ciclo" },
+            yaxis: { title: "Fluxo" }
+        }
+    );
+}
+const pontoHM3 = {{ ponto_hm3_json|safe }};
+const pontoFuturo = {{ ponto_futuro_json|safe }};
+const curvasHQ = {{ curvas_hq_json|safe }};
+const historicoHQ = {{ historico_hq_json|safe }};
+
+let traces = [];
+
+// curvas da bomba
+for (const rpm in curvasHQ) {
+    const curva = curvasHQ[rpm];
+
+    traces.push({
+        x: curva.map(p => p[0]),
+        y: curva.map(p => p[1]),
+        mode: "lines",
+        name: rpm + " rpm"
+    });
+}
+
+// sistema cardiovascular
+const rEff = {{ r_eff_dinamica_json|safe }};
+let fluxoSistema = [];
+let deltaPSistema = [];
+
+for (let q = 0; q <= 8; q += 0.1) {
+    fluxoSistema.push(q);
+    deltaPSistema.push(rEff * q);
+}
+
+traces.push({
+    x: fluxoSistema,
+    y: deltaPSistema,
+    mode: "lines",
+    line: {
+        dash: "dash",
+        width: 3
+    },
+    name: "Sistema cardiovascular"
+});
+
+// trajetória do controle
+traces.push({
+    x: historicoHQ.fluxo,
+    y: historicoHQ.delta_p,
+    mode: "lines+markers",
+    line: {
+        width: 4,
+        color: "black"
+    },
+    marker: {
+        size: 8,
+        color: "black"
+    },
+    name: "Trajetória controle"
+});
+
+// ponto atual
+traces.push({
+    x: [pontoHM3.fluxo],
+    y: [pontoHM3.delta_p],
+    mode: "markers",
+    marker: {
+        size: 14,
+        color: "red"
+    },
+    name: "Ponto atual"
+});
+
+// ponto futuro
+traces.push({
+    x: [pontoFuturo.fluxo],
+    y: [pontoFuturo.delta_p],
+    mode: "markers",
+    marker: {
+        size: 14,
+        color: "green"
+    },
+    name: "Ponto futuro"
+});
+
+Plotly.newPlot(
+    "grafico_hq_hm3",
+    traces,
+    {
+        title: "HeartMate 3 — Curva HQ",
+        xaxis: { title: "Fluxo (L/min)" },
+        yaxis: { title: "ΔP (mmHg)" }
+    }
+);
+
+
+</script>
+
+{% endif %}
+
+{% endblock %}

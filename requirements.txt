@@ -1,0 +1,12 @@
+# Dependências diretas, com as versões do ambiente local do projeto (Python 3.13).
+Django==6.0
+dj-database-url==2.2.0
+python-dotenv==1.2.2
+numpy==2.3.5
+scipy==1.17.1
+tensorflow==2.21.0
+keras==3.14.1
+scikit-fuzzy==0.5.0
+networkx==3.6.1
+matplotlib==3.10.9
+wfdb==4.3.1
