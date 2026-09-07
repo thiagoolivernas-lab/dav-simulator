@@ -115,22 +115,3 @@ Os dois scripts de resultados dependem de um registro importado e dos segmentos 
 | `projeto/` | Painel e templates compartilhados |
 | `gerar_resultados_*.py` | Geração de resultados dos experimentos |
 | `CNN_ECG_ATUAL.ipynb` | Notebook complementar de treinamento |
-
-## Publicação no GitHub
-
-Crie um repositório vazio na sua conta, sem gerar README, licença ou `.gitignore` no site. Na pasta deste projeto:
-
-```powershell
-git init -b main
-git lfs install --local
-git add .
-git status
-git lfs ls-files
-git commit -m "Prepara DAV Simulator para compartilhamento acadêmico"
-git remote add origin <URL_DO_REPOSITORIO>
-git push -u origin main
-```
-
-Revise a lista em `git status` antes do commit. O `.gitignore` exclui configurações privadas, banco, sinais, uploads, logs, ambiente virtual e resultados locais. Se o repositório for privado, conceda acesso ao professor nas configurações do GitHub.
-
-Publicar o repositório compartilha o código; o professor executa o sistema localmente seguindo os passos acima. A configuração fornecida utiliza `DEBUG=True` para desenvolvimento local.
